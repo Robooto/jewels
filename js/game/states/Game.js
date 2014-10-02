@@ -1,75 +1,203 @@
+BasicGame.Game = function(game) {
 
-BasicGame.Game = function (game) {
-
-this.grideSizeX = 7;
-this.grideSizeY = 8;
+    this.grideSizeX = 6;
+    this.grideSizeY = 6;
 
 };
 
 BasicGame.Game.prototype = {
 
-	create: function () {
+    create: function() {
+        this.moveCount = 20;
 
-		BasicGame.dotsSelected = 0;
+        this.score = 0;
 
-		this.dots = new Dots(this.game);
-		this.dots.createGW(this.grideSizeX, this.grideSizeY);
+        BasicGame.jewelsSelected = 0;
 
-		// Call 'clicked' when the user clicks
-		this.game.input.onDown.add(this.clicked, this);
-	},
+        // creating hud using graphics
+        this.hud = game.add.graphics(0, 0);
 
-	update: function () {
+        this.hud.beginFill(0x00ffff);
+        this.hud.lineStyle(5, 0x606060, 1);
+        this.hud.drawRect(0, 0, this.game.width, 100);
 
-		//	Honestly, just about anything could go here. It's YOUR game after all. Eat your heart out!
+        this.hud.moveTo(game.world.centerX, 0);
+        this.hud.lineTo(game.world.centerX, 100);
+        this.hud.endFill();
 
-	},
+        // calling our prefab jewels
+        this.jewels = new Jewels(this.game);
+        this.jewels.createGW(this.grideSizeX, this.grideSizeY);
 
-	clicked: function () {
-		// If dots are already selected, do nothing
-		if (BasicGame.dotsSelected != 0) {
-			return;
-		}
+        // Moves Label
+        this.movesLabel = this.game.add.text(35, 35, 'Moves Left', {
+            font: '30px Arial',
+            fill: '#606060'
+        });
 
-		// Return the dot that is below the pointer
-		// If there is no dot, do nothing
-		var dot = this.dots.findClickedDot(50);
-		if (!dot) {
-			return;
-		}
+        // Moves left
+        this.movesLeft = this.game.add.text(205, 30, '20', {
+            font: '40px Arial',
+            fill: '#606060'
+        });
 
-		// Set 'dot.selected = true' to all the dots that should be removed
-		// If only 1 dot is selected: do nothing
-		this.dots.selectDots(dot.i, dot.j, dot.frame);
-		if (BasicGame.dotsSelected == 1) {
-			this.dots.setAll('selected', false);
-			BasicGame.dotsSelected = 0;
-			return;
-		}
+        // score Label
+        this.scoreLabel = this.game.add.text(game.world.width - 200, 35, 'Score', {
+            font: '30px Arial',
+            fill: '#606060'
+        });
 
-		// remove the dots and update score
-		this.dots.removeSelectedDots(this.grideSizeX, this.grideSizeY);
-		//this.updateScore();
+        // score
+        this.scoreText = this.game.add.text(game.world.width - 100, 30, '0', {
+            font: '40px Arial',
+            fill: '#606060'
+        });
 
-		// Once the dots finish disapearing: refill the world with dots
-		this.game.time.events.add(300, this.refillDots, this);
-	},
+        // Call 'clicked' when the user clicks
+        this.game.input.onDown.add(this.clicked, this);
 
-	refillDots: function () {
-		this.dots.moveDotsDown(this.grideSizeX, this.grideSizeY);
-		this.dots.addMissingDots(this.grideSizeX, this.grideSizeY);
+        //sounds
+        this.nonclick = this.add.audio('nonclick');
+        this.explosion = this.add.audio('explosion');
+        this.endgame = this.add.audio('endgame');
+        this.pointsound = this.add.audio('points');
 
-		BasicGame.dotsSelected = 0;
-	},
+        // place holder for next best score from db
+        var nextScore = BasicGame.scoreToBeat;
 
-	quitGame: function (pointer) {
+        if (nextScore) {
+            var nextScoreText = game.add.text(game.world.centerX, game.world.centerY + 350, 'Rival Score: ' + nextScore, {
+                font: '36px Arial',
+                fill: '#606060'
+            });
+            nextScoreText.anchor.setTo(0.5, 0.5);
+        }
+        },
 
-		//	Here you should destroy anything you no longer need.
-		//	Stop music, delete sprites, purge caches, free resources, all that good stuff.
+        update: function() {
 
-		//	Then let's go back to the main menu.
-		this.state.start('MainMenu');
+            //	Do I even need an update function?
 
-	}
+        },
 
-};
+        clicked: function() {
+            // If jewels are already selected, do nothing
+            if (BasicGame.jewelsSelected != 0) {
+                this.nonclick.play();
+                return;
+            }
+
+            // Return the jewel that is below the pointer
+            // If there is no jewel, do nothing
+            var jewel = this.jewels.findClickedJewel();
+            if (!jewel) {
+                this.nonclick.play();
+                return;
+            }
+
+            // Set 'jewel.selected = true' to all the jewels that should be removed
+            // If only 1 jewel is selected: do nothing
+            this.jewels.selectJewels(jewel.i, jewel.j, jewel.frame);
+            if (BasicGame.jewelsSelected == 1) {
+                this.nonclick.play();
+                this.jewels.setAll('selected', false);
+                BasicGame.jewelsSelected = 0;
+                return;
+            }
+
+            // remove the jewels and update score
+            this.jewels.removeSelectedJewels(this.grideSizeX, this.grideSizeY);
+            this.explosion.play();
+            // update score and movecount
+            this.updateScore();
+            this.pointsound.play();
+            // add flying text for score
+            this.flyingText(game.input.activePointer.x, game.input.activePointer.y, BasicGame.jewelsSelected);
+
+            // Once the jewels finish disapearing: refill the world with jewels
+            this.game.time.events.add(300, this.refillJewels, this);
+        },
+
+        flyingText: function(x, y, amount) {
+            if (amount == 0) {
+                return;
+            }
+
+            var flyText = game.add.text(x - 30, y - 80, '+' + amount, {
+                font: 'bold 50px Arial',
+                fill: '#2CD82C'
+            });
+
+            game.add.tween(flyText).to({
+                y: flyText.y - 150
+            }, 500, Phaser.Easing.Quadratic.In, true).onComplete.add(function(text) {
+                text.destroy();
+            }, this);
+        },
+
+        refillJewels: function() {
+            this.jewels.moveJewelsDown(this.grideSizeX, this.grideSizeY);
+            this.jewels.addMissingJewels(this.grideSizeX, this.grideSizeY);
+
+            BasicGame.jewelsSelected = 0;
+        },
+
+        updateScore: function() {
+            // Update the score
+            this.score += BasicGame.jewelsSelected;
+            this.scoreText.text = this.score;
+
+
+            // update move count
+            this.moveCount--;
+            this.movesLeft.text = this.moveCount;
+
+            // End the game when moves get to 0
+            if (this.moveCount <= 0) {
+                this.game.time.events.add(600, this.quitGame, this);
+            }
+        },
+
+        quitGame: function(pointer) {
+
+            var isNewHighScore = false; // flag for high score
+
+            // grab highscore from local storage if it is there
+
+            if (BasicGame.highScore < this.score) {
+                isNewHighScore = true;
+                BasicGame.highScore = this.score;
+            }
+
+            var leaderboardName = localStorage.getItem('samJeweledName');
+
+            if (BasicGame.highScore > 100) {
+                this.getName(leaderboardName);
+            }
+            //	Then let's go back to the main menu.
+            this.endgame.play();
+            this.state.start('MainMenu');
+
+        },
+
+        getName: function(name) {
+            if (!name) {
+                name = prompt("Please enter your name for the Leaderboard.", "");
+            }
+
+            if (name == '' || name == 'null' || name == null) {
+                name = 'Guest' + game.rnd.integer();
+            }
+
+            while (name.length > 20) {
+                name = prompt("Please enter your name using less than 20 characters.");
+            }
+
+            localStorage.setItem('samJeweledName', name);
+
+        },
+        render: function() {
+            //this.game.debug.inputInfo(16, 200);
+        }
+
+    };
