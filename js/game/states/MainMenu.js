@@ -19,8 +19,8 @@ BasicGame.MainMenu.prototype = {
         // emitter for fun
         var menuEmitter = game.add.emitter(game.world.centerX, this.game.height);
         menuEmitter.makeParticles('jewels', [0, 1, 2, 3], 20);
-        menuEmitter.start(false, 6000);
-        menuEmitter.setYSpeed(-105, -400);
+        menuEmitter.start(false, 9000);
+        menuEmitter.setYSpeed(-105, -450);
         menuEmitter.setXSpeed(-100, 100);
 
         // Name of the game
@@ -29,8 +29,6 @@ BasicGame.MainMenu.prototype = {
             fill: '#606060'
         });
         nameLabel.anchor.setTo(0.5, 0.5);
-
-
 
         // How to start the game
         var startLabel = game.add.text(game.world.centerX, 900, 'Tap the screen to Start', {

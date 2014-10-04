@@ -1,17 +1,17 @@
-var Explosion = function(game) { 
-	
-	// properties for emitters
-	this.emitterprop = {
-		ySpeedL: -50,
-		ySpeedH: 200,
-		xSpeedL: -250,
-		xSpeedH: 250,
-		minScale: 0.5,
-		maxScale: 2.5,
-		gravity: 300
-	};
+var Explosion = function(game) {
 
-	// Init emitter for wall explosions
+    // properties for emitters
+    this.emitterprop = {
+        ySpeedL: -50,
+        ySpeedH: 200,
+        xSpeedL: -250,
+        xSpeedH: 250,
+        minScale: 0.5,
+        maxScale: 2.5,
+        gravity: 300
+    };
+
+    // Init emitter for jewel explosions
     this.pix0Emitter = game.add.emitter(0, 0, 80);
     this.pix0Emitter.makeParticles('pix0');
     this.pix0Emitter.setYSpeed(this.emitterprop.ySpeedL, this.emitterprop.ySpeedH);
@@ -48,27 +48,28 @@ var Explosion = function(game) {
 
 Explosion.prototype.explodeJewel = function(x, y, frame) {
 
-	switch(frame) {
-		case 0:
-			this.pix0Emitter.x = x;
- 			this.pix0Emitter.y = y;
- 			this.pix0Emitter.start(true, 500, null, 10);
- 			break;
- 		case 1:
- 			this.pix1Emitter.x = x;
- 			this.pix1Emitter.y = y;
- 			this.pix1Emitter.start(true, 500, null, 10);
- 			break;
- 		case 2:
- 			this.pix2Emitter.x = x;
- 			this.pix2Emitter.y = y;
- 			this.pix2Emitter.start(true, 500, null, 10);
- 			break;
- 		case 3:
- 			this.pix3Emitter.x = x;
- 			this.pix3Emitter.y = y;
- 			this.pix3Emitter.start(true, 500, null, 10);
- 			break;
-	}
+    // use the correct sprite for each jewel
+    switch (frame) {
+        case 0:
+            this.pix0Emitter.x = x;
+            this.pix0Emitter.y = y;
+            this.pix0Emitter.start(true, 500, null, 10);
+            break;
+        case 1:
+            this.pix1Emitter.x = x;
+            this.pix1Emitter.y = y;
+            this.pix1Emitter.start(true, 500, null, 10);
+            break;
+        case 2:
+            this.pix2Emitter.x = x;
+            this.pix2Emitter.y = y;
+            this.pix2Emitter.start(true, 500, null, 10);
+            break;
+        case 3:
+            this.pix3Emitter.x = x;
+            this.pix3Emitter.y = y;
+            this.pix3Emitter.start(true, 500, null, 10);
+            break;
+    }
 
 };

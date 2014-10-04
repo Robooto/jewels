@@ -1,5 +1,6 @@
 BasicGame.Game = function(game) {
 
+    // set gridsize
     this.grideSizeX = 6;
     this.grideSizeY = 6;
 
@@ -8,6 +9,7 @@ BasicGame.Game = function(game) {
 BasicGame.Game.prototype = {
 
     create: function() {
+        // Set game vars
         this.moveCount = 20;
 
         this.score = 0;
@@ -72,132 +74,136 @@ BasicGame.Game.prototype = {
             });
             nextScoreText.anchor.setTo(0.5, 0.5);
         }
-        },
+    },
 
-        update: function() {
+    update: function() {
 
-            //	Do I even need an update function?
+        //	Do I even need an update function?
 
-        },
+    },
 
-        clicked: function() {
-            // If jewels are already selected, do nothing
-            if (BasicGame.jewelsSelected != 0) {
-                this.nonclick.play();
-                return;
-            }
-
-            // Return the jewel that is below the pointer
-            // If there is no jewel, do nothing
-            var jewel = this.jewels.findClickedJewel();
-            if (!jewel) {
-                this.nonclick.play();
-                return;
-            }
-
-            // Set 'jewel.selected = true' to all the jewels that should be removed
-            // If only 1 jewel is selected: do nothing
-            this.jewels.selectJewels(jewel.i, jewel.j, jewel.frame);
-            if (BasicGame.jewelsSelected == 1) {
-                this.nonclick.play();
-                this.jewels.setAll('selected', false);
-                BasicGame.jewelsSelected = 0;
-                return;
-            }
-
-            // remove the jewels and update score
-            this.jewels.removeSelectedJewels(this.grideSizeX, this.grideSizeY);
-            this.explosion.play();
-            // update score and movecount
-            this.updateScore();
-            this.pointsound.play();
-            // add flying text for score
-            this.flyingText(game.input.activePointer.x, game.input.activePointer.y, BasicGame.jewelsSelected);
-
-            // Once the jewels finish disapearing: refill the world with jewels
-            this.game.time.events.add(300, this.refillJewels, this);
-        },
-
-        flyingText: function(x, y, amount) {
-            if (amount == 0) {
-                return;
-            }
-
-            var flyText = game.add.text(x - 30, y - 80, '+' + amount, {
-                font: 'bold 50px Arial',
-                fill: '#2CD82C'
-            });
-
-            game.add.tween(flyText).to({
-                y: flyText.y - 150
-            }, 500, Phaser.Easing.Quadratic.In, true).onComplete.add(function(text) {
-                text.destroy();
-            }, this);
-        },
-
-        refillJewels: function() {
-            this.jewels.moveJewelsDown(this.grideSizeX, this.grideSizeY);
-            this.jewels.addMissingJewels(this.grideSizeX, this.grideSizeY);
-
-            BasicGame.jewelsSelected = 0;
-        },
-
-        updateScore: function() {
-            // Update the score
-            this.score += BasicGame.jewelsSelected;
-            this.scoreText.text = this.score;
-
-
-            // update move count
-            this.moveCount--;
-            this.movesLeft.text = this.moveCount;
-
-            // End the game when moves get to 0
-            if (this.moveCount <= 0) {
-                this.game.time.events.add(600, this.quitGame, this);
-            }
-        },
-
-        quitGame: function(pointer) {
-
-            var isNewHighScore = false; // flag for high score
-
-            // grab highscore from local storage if it is there
-
-            if (BasicGame.highScore < this.score) {
-                isNewHighScore = true;
-                BasicGame.highScore = this.score;
-            }
-
-            var leaderboardName = localStorage.getItem('samJeweledName');
-
-            if (BasicGame.highScore > 100) {
-                this.getName(leaderboardName);
-            }
-            //	Then let's go back to the main menu.
-            this.endgame.play();
-            this.state.start('MainMenu');
-
-        },
-
-        getName: function(name) {
-            if (!name) {
-                name = prompt("Please enter your name for the Leaderboard.", "");
-            }
-
-            if (name == '' || name == 'null' || name == null) {
-                name = 'Guest' + game.rnd.integer();
-            }
-
-            while (name.length > 20) {
-                name = prompt("Please enter your name using less than 20 characters.");
-            }
-
-            localStorage.setItem('samJeweledName', name);
-
-        },
-        render: function() {
-            //this.game.debug.inputInfo(16, 200);
+    clicked: function() {
+        // If jewels are already selected, do nothing
+        if (BasicGame.jewelsSelected != 0) {
+            this.nonclick.play();
+            return;
         }
 
-    };
+        // Return the jewel that is below the pointer
+        // If there is no jewel, do nothing
+        var jewel = this.jewels.findClickedJewel();
+        if (!jewel) {
+            this.nonclick.play();
+            return;
+        }
+
+        // Set 'jewel.selected = true' to all the jewels that should be removed
+        // If only 1 jewel is selected: do nothing
+        this.jewels.selectJewels(jewel.i, jewel.j, jewel.frame);
+        if (BasicGame.jewelsSelected == 1) {
+            this.nonclick.play();
+            this.jewels.setAll('selected', false);
+            BasicGame.jewelsSelected = 0;
+            return;
+        }
+
+        // remove the jewels and update score
+        this.jewels.removeSelectedJewels(this.grideSizeX, this.grideSizeY);
+        this.explosion.play();
+        // update score and movecount
+        this.updateScore();
+        this.pointsound.play();
+        // add flying text for score
+        this.flyingText(game.input.activePointer.x, game.input.activePointer.y, BasicGame.jewelsSelected);
+
+        // Once the jewels finish disapearing: refill the world with jewels
+        this.game.time.events.add(300, this.refillJewels, this);
+    },
+
+    // flying text for score
+    flyingText: function(x, y, amount) {
+        if (amount == 0) {
+            return;
+        }
+
+        var flyText = game.add.text(x - 30, y - 80, '+' + amount, {
+            font: 'bold 50px Arial',
+            fill: '#2CD82C'
+        });
+
+        game.add.tween(flyText).to({
+            y: flyText.y - 150
+        }, 500, Phaser.Easing.Quadratic.In, true).onComplete.add(function(text) {
+            text.destroy();
+        }, this);
+    },
+
+    // Add back the jewels to the screen and reset the selected count
+    refillJewels: function() {
+        this.jewels.moveJewelsDown(this.grideSizeX, this.grideSizeY);
+        this.jewels.addMissingJewels(this.grideSizeX, this.grideSizeY);
+
+        BasicGame.jewelsSelected = 0;
+    },
+
+    updateScore: function() {
+        // Update the score
+        this.score += BasicGame.jewelsSelected;
+        this.scoreText.text = this.score;
+
+
+        // update move count
+        this.moveCount--;
+        this.movesLeft.text = this.moveCount;
+
+        // End the game when moves get to 0
+        if (this.moveCount <= 0) {
+            this.game.time.events.add(600, this.quitGame, this);
+        }
+    },
+
+    quitGame: function(pointer) {
+
+        var isNewHighScore = false; // flag for high score
+
+        // grab highscore from local storage if it is there
+
+        if (BasicGame.highScore < this.score) {
+            isNewHighScore = true;
+            BasicGame.highScore = this.score;
+        }
+
+        var leaderboardName = localStorage.getItem('samJeweledName');
+
+        // If score is higher than 50 get a name and post to the leaderboard
+        if (BasicGame.highScore > 50) {
+            this.getName(leaderboardName);
+        }
+        //	Then let's go back to the main menu.
+        this.endgame.play();
+        this.state.start('MainMenu');
+
+    },
+
+    // prompt the user for a name, basic validation included
+    getName: function(name) {
+        if (!name) {
+            name = prompt("Please enter your name for the Leaderboard.", "");
+        }
+
+        if (name == '' || name == 'null' || name == null) {
+            name = 'Guest' + game.rnd.integer();
+        }
+
+        while (name.length > 20) {
+            name = prompt("Please enter your name using less than 20 characters.");
+        }
+
+        localStorage.setItem('samJeweledName', name);
+
+    },
+    render: function() {
+        //this.game.debug.inputInfo(16, 200);
+    }
+
+};
